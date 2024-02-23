@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import {Test, console} from "forge-std/Test.sol";
 
 contract VaultLogic {
 
@@ -12,7 +13,9 @@ contract VaultLogic {
   }
 
   function changeOwner(bytes32 _password, address newOwner) public {
+    console.log("changeOwner: ");
     if (password == _password) {
+      console.log("changeOwner: change owner ok");
         owner = newOwner;
     } else {
       revert("password error");
@@ -62,9 +65,11 @@ contract Vault {
     }
   }
 
-  function withdraw() public {
-
-    if(canWithdraw && deposites[msg.sender] >= 0) {
+  function withdraw() public{
+    console.log("call withdraw");
+    require(canWithdraw, "can not withdraw");
+    console.log("withdraw: ", deposites[msg.sender]);
+    if(deposites[msg.sender] >= 0) {
       (bool result,) = msg.sender.call{value: deposites[msg.sender]}("");
       if(result) {
         deposites[msg.sender] = 0;

